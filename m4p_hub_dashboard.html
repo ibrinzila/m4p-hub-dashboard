@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M4P Hub - Property Search Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Public+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #d97706;
+            --primary-light: #fbbf24;
+            --primary-dark: #b45309;
+            --success: #059669;
+            --success-light: #d1fae5;
+            --warning: #dc2626;
+            --warning-light: #fee2e2;
+            --info: #2563eb;
+            --info-light: #dbeafe;
+            --neutral-50: #fafaf9;
+            --neutral-100: #f5f5f4;
+            --neutral-200: #e7e5e4;
+            --neutral-300: #d6d3d1;
+            --neutral-700: #44403c;
+            --neutral-800: #292524;
+            --neutral-900: #1c1917;
+        }
+
+        body {
+            font-family: 'Public Sans', -apple-system, system-ui, sans-serif;
+            background: linear-gradient(165deg, #fff7ed 0%, #fef3c7 50%, #fef9c3 100%);
+            min-height: 100vh;
+            padding: 0;
+            color: var(--neutral-900);
+            line-height: 1.6;
+        }
+
+        .grain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.03;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='3.5' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' /%3E%3C/svg%3E");
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        header {
+            background: white;
+            padding: 40px 50px;
+            border-radius: 24px;
+            margin-bottom: 40px;
+            box-shadow: 0 20px 60px rgba(217, 119, 6, 0.08);
+            border: 1px solid rgba(217, 119, 6, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 50%, var(--primary) 100%);
+        }
+
+        h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 3rem;
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+            font-weight: 400;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--neutral-700);
+            font-weight: 300;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--neutral-200);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(217, 119, 6, 0.15);
+            border-color: var(--primary-light);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            font-family: 'DM Serif Display', serif;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+
+        .stat-label {
+            color: var(--neutral-700);
+            font-size: 0.95rem;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .filters {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--neutral-200);
+        }
+
+        .filters-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--neutral-800);
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--neutral-700);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--neutral-200);
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: inherit;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+        }
+
+        .property-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 24px;
+            opacity: 0;
+            animation: fadeIn 0.6s ease forwards 0.2s;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        .property-card {
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--neutral-200);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .property-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: var(--primary);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .property-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .property-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 50px rgba(217, 119, 6, 0.12);
+            border-color: var(--primary-light);
+        }
+
+        .property-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 16px;
+        }
+
+        .property-id {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1.2rem;
+            font-family: 'DM Serif Display', serif;
+        }
+
+        .score {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .score.high { background: linear-gradient(135deg, #059669, #047857); }
+        .score.medium { background: linear-gradient(135deg, #d97706, #b45309); }
+        .score.low { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+
+        .address {
+            font-size: 1.1rem;
+            color: var(--neutral-900);
+            margin-bottom: 16px;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .status-pending { background: var(--warning-light); color: var(--warning); }
+        .status-review { background: var(--info-light); color: var(--info); }
+        .status-visited { background: #fce7f3; color: #be185d; }
+        .status-approved { background: var(--success-light); color: var(--success); }
+
+        .property-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+            padding: 20px 0;
+            border-top: 1px solid var(--neutral-200);
+            border-bottom: 1px solid var(--neutral-200);
+        }
+
+        .detail {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            color: var(--neutral-700);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            font-weight: 600;
+        }
+
+        .detail-value {
+            font-size: 1.1rem;
+            color: var(--neutral-900);
+            font-weight: 600;
+        }
+
+        .checks {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .check-badge {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .check-badge.yes {
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        .check-badge.no {
+            background: var(--warning-light);
+            color: var(--warning);
+        }
+
+        .property-link {
+            display: block;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 14px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+        }
+
+        .property-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(217, 119, 6, 0.4);
+            background: linear-gradient(135deg, var(--primary-dark), #92400e);
+        }
+
+        .priority-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .priority-high { background: #fee2e2; color: #dc2626; }
+        .priority-medium { background: #fef3c7; color: #d97706; }
+        .priority-low { background: #e0e7ff; color: #4f46e5; }
+
+        .loading {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--neutral-700);
+            font-size: 1.2rem;
+        }
+
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--neutral-700);
+        }
+
+        .no-results h3 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            header {
+                padding: 30px 24px;
+            }
+
+            .property-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-number {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="grain"></div>
+    
+    <div class="container">
+        <header>
+            <h1>🏢 Moldova for Peace Hub</h1>
+            <p class="subtitle">Phase 3 Relocation • Property Search Dashboard</p>
+        </header>
+
+        <div class="stats-grid" id="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="total-properties">-</div>
+                <div class="stat-label">Total Properties</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="avg-rent">-</div>
+                <div class="stat-label">Avg Rent (EUR)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="in-budget">-</div>
+                <div class="stat-label">Within Budget</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="meets-requirements">-</div>
+                <div class="stat-label">Meets Requirements</div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <div class="filters-title">Filter Properties</div>
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label>Status</label>
+                    <select id="filter-status">
+                        <option value="">All Statuses</option>
+                        <option value="Under Review">Under Review</option>
+                        <option value="Site Visit Scheduled">Site Visit Scheduled</option>
+                        <option value="Visited">Visited</option>
+                        <option value="Approved">Approved</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Priority</label>
+                    <select id="filter-priority">
+                        <option value="">All Priorities</option>
+                        <option value="High">High Priority</option>
+                        <option value="Medium">Medium Priority</option>
+                        <option value="Low">Low Priority</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Max Rent (EUR)</label>
+                    <input type="number" id="filter-rent" placeholder="e.g., 2000">
+                </div>
+                <div class="filter-group">
+                    <label>Min Score</label>
+                    <input type="number" id="filter-score" min="1" max="10" placeholder="1-10">
+                </div>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">Loading properties</div>
+        <div class="property-grid" id="property-grid"></div>
+    </div>
+
+    <script>
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQzTUbt1_wTt6zQZkinpe_YjQARUacbcuuOtWFY_sOyx_ojgOlcrS8Jm9D-oIPkEf7Ahpe0INHAowHM/pub?gid=1343144411&single=true&output=csv';
+
+        let allProperties = [];
+
+        async function loadProperties() {
+            try {
+                const response = await fetch(SHEET_URL);
+                const text = await response.text();
+                const data = parseCSV(text);
+                
+                // Skip header row and parse properties
+                allProperties = data.slice(1)
+                    .filter(row => row[0] && row[0].trim()) // Filter out empty rows
+                    .map(row => ({
+                        id: row[0] || '',
+                        address: row[1] || 'No address',
+                        area: row[2] || '',
+                        rent: parseFloat(row[3]) || 0,
+                        score: parseFloat(row[4]) || 0,
+                        status: row[5] || 'Pending',
+                        transport: row[6] || '',
+                        sizeOk: row[7] || '',
+                        budgetOk: row[8] || '',
+                        accessible: row[9] || '',
+                        priority: row[10] || '',
+                        link: row[11] || ''
+                    }));
+
+                updateStats();
+                filterProperties();
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('property-grid').style.opacity = '1';
+            } catch (error) {
+                console.error('Error loading properties:', error);
+                document.getElementById('loading').innerHTML = '⚠️ Error loading properties.<br>Please check your connection or sheet permissions.';
+            }
+        }
+
+        function parseCSV(text) {
+            const rows = [];
+            let currentRow = [];
+            let currentCell = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                const nextChar = text[i + 1];
+                
+                if (char === '"') {
+                    if (inQuotes && nextChar === '"') {
+                        currentCell += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    currentRow.push(currentCell.trim());
+                    currentCell = '';
+                } else if ((char === '\n' || char === '\r') && !inQuotes) {
+                    if (currentCell || currentRow.length > 0) {
+                        currentRow.push(currentCell.trim());
+                        rows.push(currentRow);
+                        currentRow = [];
+                        currentCell = '';
+                    }
+                    if (char === '\r' && nextChar === '\n') {
+                        i++;
+                    }
+                } else {
+                    currentCell += char;
+                }
+            }
+            
+            if (currentCell || currentRow.length > 0) {
+                currentRow.push(currentCell.trim());
+                rows.push(currentRow);
+            }
+            
+            return rows;
+        }
+
+        function updateStats() {
+            document.getElementById('total-properties').textContent = allProperties.length;
+            
+            const validRents = allProperties.filter(p => p.rent > 0);
+            const avgRent = validRents.length > 0 
+                ? Math.round(validRents.reduce((sum, p) => sum + p.rent, 0) / validRents.length)
+                : 0;
+            document.getElementById('avg-rent').textContent = avgRent > 0 ? avgRent : '-';
+            
+            const inBudget = allProperties.filter(p => p.budgetOk === 'Yes').length;
+            document.getElementById('in-budget').textContent = inBudget;
+            
+            const meetsReqs = allProperties.filter(p => 
+                p.sizeOk === 'Yes' && p.accessible === 'Yes' && p.transport === 'Yes'
+            ).length;
+            document.getElementById('meets-requirements').textContent = meetsReqs;
+        }
+
+        function filterProperties() {
+            const statusFilter = document.getElementById('filter-status').value;
+            const priorityFilter = document.getElementById('filter-priority').value;
+            const rentFilter = parseFloat(document.getElementById('filter-rent').value) || Infinity;
+            const scoreFilter = parseFloat(document.getElementById('filter-score').value) || 0;
+
+            const filtered = allProperties.filter(prop => {
+                if (statusFilter && prop.status !== statusFilter) return false;
+                if (priorityFilter && prop.priority !== priorityFilter) return false;
+                if (prop.rent > rentFilter) return false;
+                if (prop.score < scoreFilter) return false;
+                return true;
+            });
+
+            displayProperties(filtered);
+        }
+
+        function displayProperties(properties) {
+            const grid = document.getElementById('property-grid');
+            
+            if (properties.length === 0) {
+                grid.innerHTML = '<div class="no-results"><h3>No properties match your filters</h3><p>Try adjusting your filter criteria</p></div>';
+                return;
+            }
+
+            grid.innerHTML = properties.map(prop => `
+                <div class="property-card">
+                    ${prop.priority ? `<div class="priority-badge priority-${prop.priority.toLowerCase()}">${prop.priority}</div>` : ''}
+                    
+                    <div class="property-header">
+                        <div class="property-id">${prop.id}</div>
+                        ${prop.score > 0 ? `<div class="score ${getScoreClass(prop.score)}">${prop.score}/10</div>` : ''}
+                    </div>
+                    
+                    <div class="address">${prop.address}</div>
+                    
+                    <div class="status-badge ${getStatusClass(prop.status)}">
+                        ${prop.status || 'Pending Review'}
+                    </div>
+                    
+                    <div class="property-details">
+                        <div class="detail">
+                            <span class="detail-label">Area</span>
+                            <span class="detail-value">${prop.area || '-'}</span>
+                        </div>
+                        <div class="detail">
+                            <span class="detail-label">Rent</span>
+                            <span class="detail-value">${prop.rent > 0 ? prop.rent + ' EUR' : '-'}</span>
+                        </div>
+                        <div class="detail">
+                            <span class="detail-label">Transport</span>
+                            <span class="detail-value">${prop.transport === 'Yes' ? '✓ Near' : prop.transport === 'No' ? '✗ Far' : '-'}</span>
+                        </div>
+                        <div class="detail">
+                            <span class="detail-label">Priority</span>
+                            <span class="detail-value">${prop.priority || '-'}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="checks">
+                        ${prop.sizeOk ? `<span class="check-badge ${prop.sizeOk === 'Yes' ? 'yes' : 'no'}">
+                            ${prop.sizeOk === 'Yes' ? '✓' : '✗'} Size (250+ sqm)
+                        </span>` : ''}
+                        ${prop.budgetOk ? `<span class="check-badge ${prop.budgetOk === 'Yes' ? 'yes' : 'no'}">
+                            ${prop.budgetOk === 'Yes' ? '✓' : '✗'} Budget
+                        </span>` : ''}
+                        ${prop.accessible ? `<span class="check-badge ${prop.accessible === 'Yes' ? 'yes' : 'no'}">
+                            ${prop.accessible === 'Yes' ? '✓' : '✗'} Accessible
+                        </span>` : ''}
+                    </div>
+                    
+                    ${prop.link ? `<a href="${prop.link}" target="_blank" class="property-link">
+                        View Listing →
+                    </a>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function getScoreClass(score) {
+            if (score >= 8) return 'high';
+            if (score >= 5) return 'medium';
+            return 'low';
+        }
+
+        function getStatusClass(status) {
+            const statusLower = status.toLowerCase();
+            if (statusLower.includes('pending')) return 'status-pending';
+            if (statusLower.includes('review')) return 'status-review';
+            if (statusLower.includes('visit')) return 'status-visited';
+            if (statusLower.includes('approved')) return 'status-approved';
+            return 'status-review';
+        }
+
+        // Event listeners
+        document.getElementById('filter-status').addEventListener('change', filterProperties);
+        document.getElementById('filter-priority').addEventListener('change', filterProperties);
+        document.getElementById('filter-rent').addEventListener('input', filterProperties);
+        document.getElementById('filter-score').addEventListener('input', filterProperties);
+
+        // Load properties on page load
+        loadProperties();
+        
+        // Auto-refresh every 2 minutes
+        setInterval(loadProperties, 120000);
+    </script>
+</body>
+</html>
